@@ -1,8 +1,8 @@
+import type Player from '@amplitude/rrweb-player';
 import { EventType, eventWithTime } from '@amplitude/rrweb-types';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { chromium } from 'playwright';
-import type Player from '@amplitude/rrweb-player';
 
 const rrwebScriptPath = path.resolve(
   require.resolve('@amplitude/rrweb-player'),
@@ -12,7 +12,7 @@ const rrwebStylePath = path.resolve(rrwebScriptPath, '../style.css');
 const rrwebRaw = fs.readFileSync(rrwebScriptPath, 'utf-8');
 const rrwebStyle = fs.readFileSync(rrwebStylePath, 'utf-8');
 // The max valid scale value for the scaling method which can improve the video quality.
-const MaxScaleValue = 2.5;
+const MaxScaleValue = 4;
 
 type RRvideoConfig = {
   input: string;
@@ -21,6 +21,7 @@ type RRvideoConfig = {
   // A number between 0 and 1. The higher the value, the better the quality of the video.
   resolutionRatio?: number;
   // A callback function that will be called when the progress of the replay is updated.
+  fps?: number;
   onProgressUpdate?: (percent: number) => void;
   rrwebPlayer?: Omit<
     ConstructorParameters<typeof Player>[0]['props'],
@@ -33,7 +34,8 @@ const defaultConfig: Required<RRvideoConfig> = {
   output: 'rrvideo-output.webm',
   headless: true,
   // A good trade-off value between quality and file size.
-  resolutionRatio: 0.8,
+  resolutionRatio: 1,
+  fps: 30,
   onProgressUpdate: () => {
     //
   },
@@ -64,7 +66,8 @@ function getHtml(events: Array<eventWithTime>, config?: RRvideoConfig): string {
         props: {
           ...userConfig,
           events,
-          showController: false,          
+          showController: false,       
+          UNSAFE_replayCanvas: true,   
         },
       });
       window.replayer.addEventListener('finish', () => window.onReplayFinish());
